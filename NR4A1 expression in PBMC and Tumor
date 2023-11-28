@@ -1,0 +1,201 @@
+library(Seurat)
+library(dplyr)
+library(patchwork)
+########## PBMC tumor patients 
+RCC.PBMC1.data <- Read10X("/blue/zhangw/my.kim/report/nick/Blood1/")
+RCC.PBMC2.data <- Read10X("/blue/zhangw/my.kim/report/nick/Blood2/")
+RCC.PBMC3.data <- Read10X("/blue/zhangw/my.kim/report/nick/Blood3/")
+
+RCC.PBMC1 <- CreateSeuratObject(counts = RCC.PBMC1.data, project = "Treg.GSE121638", min.cells = 3, min.features = 200)
+RCC.PBMC2 <- CreateSeuratObject(counts = RCC.PBMC2.data, project = "Treg.GSE121638", min.cells = 3, min.features = 200)
+RCC.PBMC3 <- CreateSeuratObject(counts = RCC.PBMC3.data, project = "Treg.GSE121638", min.cells = 3, min.features = 200)
+
+
+########## Melanoma contains few CD177 Treg
+melanoma.data <- Read10X("/blue/zhangw/my.kim/report/melanoma/Tumor/")
+melanomaPBMC1.data <- Read10X("/blue/zhangw/my.kim/report/melanoma/Blood1")
+melanomaPBMC2.data <- Read10X("/blue/zhangw/my.kim/report/melanoma/Blood2")
+melanomaLN1.data <- Read10X("/blue/zhangw/my.kim/report/melanoma/LN1/")
+melanomaLN2.data <- Read10X("/blue/zhangw/my.kim/report/melanoma/LN2/")
+melanomaLN3.data <- Read10X("/blue/zhangw/my.kim/report/melanoma/LN3/")
+
+melanoma <- CreateSeuratObject(counts = melanoma.data, project = "Treg.GSE148190", min.cells = 3, min.features = 200)
+melanoma.PBMC1 <- CreateSeuratObject(counts = melanomaPBMC1.data, project = "Treg.GSE148190", min.cells = 3, min.features = 200)
+melanoma.PBMC2 <- CreateSeuratObject(counts = melanomaPBMC2.data, project = "Treg.GSE148190", min.cells = 3, min.features = 200)
+melanoma.LN1 <- CreateSeuratObject(counts = melanomaLN1.data, project = "Treg.GSE148190", min.cells = 3, min.features = 200)
+melanoma.LN2 <- CreateSeuratObject(counts = melanomaLN2.data, project = "Treg.GSE148190", min.cells = 3, min.features = 200)
+melanoma.LN3 <- CreateSeuratObject(counts = melanomaLN3.data, project = "Treg.GSE148190", min.cells = 3, min.features = 200)
+
+#############
+melanoma.uvea.data <- Read10X(data.dir = "/blue/zhangw/my.kim/report/metastasistumors/melanoma")
+melanoma.liver1.data <- Read10X(data.dir = "/blue/zhangw/my.kim/report/metastasistumors/liver/")
+melanoma.liver2.data <- Read10X(data.dir = "/blue/zhangw/my.kim/report/metastasistumors/liver2/")
+melanoma.liver.CD45.1.data <- Read10X(data.dir = "/blue/zhangw/my.kim/report/metastasistumors/liverCD45_1/")
+melanoma.liver.CD45.2.data <- Read10X(data.dir = "/blue/zhangw/my.kim/report/metastasistumors/liverCD45_2/")
+
+melanoma.uvea <- CreateSeuratObject(counts = melanoma.uvea.data, project = "Treg.GSE158803", min.cells = 3, min.features = 200)
+melanoma.liver1 <- CreateSeuratObject(counts = melanoma.liver1.data, project = "Treg.GSE158803", min.cells = 3, min.features = 200)
+melanoma.liver2 <- CreateSeuratObject(counts = melanoma.liver2.data, project = "Treg.GSE158803", min.cells = 3, min.features = 200)
+melanoma.liver3 <- CreateSeuratObject(counts = melanoma.liver.CD45.1.data, project = "Treg.GSE158803", min.cells = 3, min.features = 200)
+melanoma.liver4 <- CreateSeuratObject(counts = melanoma.liver.CD45.2.data, project = "Treg.GSE158803", min.cells = 3, min.features = 200)
+
+
+
+########## subsetting
+melanoma$Subset <- "TI"
+melanoma.PBMC1$Subset <- "PBMC"
+melanoma.PBMC2$Subset <- "PBMC"
+melanoma.LN1$Subset <- "Metastasis"
+melanoma.LN2$Subset <- "Metastasis"
+melanoma.LN3$Subset <- "Metastasis"
+
+melanoma.uvea$Subset <- "TI"
+melanoma.liver1$Subset <- "Metastasis"
+melanoma.liver2$Subset <- "Metastasis"
+melanoma.liver3$Subset <- "Metastasis"
+melanoma.liver4$Subset <- "Metastasis"
+
+RCC.PBMC1$Subset <- "PBMC"
+RCC.PBMC2$Subset <- "PBMC"
+RCC.PBMC3$Subset <- "PBMC"
+
+melanoma.uvea$Subset2 <- "Tumor"
+melanoma.liver1$Subset2 <- "Tumor"
+melanoma.liver2$Subset2 <- "Tumor"
+melanoma.liver3$Subset2 <- "Tumor"
+melanoma.liver4$Subset2 <- "Tumor"
+
+melanoma$Subset2 <- "Tumor"
+melanoma.PBMC1$Subset2 <- "Blood"
+melanoma.PBMC2$Subset2 <- "Blood"
+melanoma.LN1$Subset2 <- "Tumor"
+melanoma.LN2$Subset2 <- "Tumor"
+melanoma.LN3$Subset2 <- "Tumor"
+
+RCC.PBMC1$Subset2 <- "Blood"
+RCC.PBMC2$Subset2 <- "Blood"
+RCC.PBMC3$Subset2 <- "Blood"
+##########
+Treg.BIG <-merge(melanoma, y = c(melanoma.PBMC1, melanoma.PBMC2, melanoma.LN1, melanoma.LN2, melanoma.LN3, 
+                                 melanoma.uvea, melanoma.liver1, melanoma.liver2, melanoma.liver3, melanoma.liver4,
+                                 RCC.PBMC1, RCC.PBMC2, RCC.PBMC3), 
+                 add.cell.ids = c("melanoma", "melanoma.PBMC1", "melanoma.PBMC2","melanoma.LN1","melanoma.LN2", "melanoma.LN3",
+                                  "melanoma.uvea","melanoma.liver1","melanoma.liver2","melanoma.liver3","melanoma.liver4",
+                                  "RCC.PBMC1","RCC.PBMC2","RCC.PBMC3"), 
+                 project = "Melanoma_Treg")
+Treg.BIG[["percent.mt"]] <- PercentageFeatureSet(Treg.BIG, pattern = "^MT-")
+VlnPlot(Treg.BIG, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3, pt.size = 0)
+ggsave("/blue/zhangw/my.kim/report/QCbefore_morethan10CD177Treg.png", width=6, height =3)
+
+Treg.BIG <-subset(Treg.BIG, subset = nFeature_RNA > 200 &nFeature_RNA <5000 & percent.mt <10) 
+Treg_list <- SplitObject(Treg.BIG, split.by = "orig.ident")
+Treg_list <- lapply(X = Treg_list, FUN = function(x) {
+  x <- NormalizeData(x)
+  x <- FindVariableFeatures(x, nfeatures = 3000)})
+
+features <- SelectIntegrationFeatures(object.list = Treg_list)
+Treg.anchors <- FindIntegrationAnchors(object.list = Treg_list, anchor.features = features)
+Treg.combined <- IntegrateData(anchorset = Treg.anchors) 
+
+############## if failed due to logical error,
+Treg_list  <- Treg_list[[1]] #This just removes the list and make it a single seurat object
+Treg_list$sample <- stringr::str_split(rownames(Treg_list[[]]), "_", simplify = TRUE)[,1] #This is taking the prefix of the barcodes
+Treg_list <- SplitObject(Treg_list, split.by = "sample")
+Treg_list <- lapply(X = Treg_list, FUN = function(x) {
+  x <- NormalizeData(x)
+  x <- FindVariableFeatures(x, nfeatures = 3000)})
+
+features <- SelectIntegrationFeatures(object.list = Treg_list)
+Treg.anchors <- FindIntegrationAnchors(object.list = Treg_list, anchor.features = features)
+Treg.combined <- IntegrateData(anchorset = Treg.anchors) 
+
+###
+DefaultAssay(Treg.combined) <- "integrated"
+Treg.combined <-ScaleData(Treg.combined, verbose = FALSE)
+Treg.combined <-RunPCA(Treg.combined, npcs = 30, verbose = FALSE)
+Treg.combined <-RunUMAP(Treg.combined, reduction = "pca", dims = 1:30)
+Treg.combined <-RunTSNE(Treg.combined, reduction = "pca", dims = 1:30, check_duplicates = FALSE)
+Treg.combined <- FindNeighbors(Treg.combined, reduction = "pca", dims = 1:30)
+Treg.combined <- FindClusters(Treg.combined, resolution = 1.2)
+DefaultAssay(Treg.combined) <- "RNA"
+
+####
+FeaturePlot(Treg.combined, reduction = "umap", features = c("KLRF1"), label = T)
+ggsave("/blue/zhangw/my.kim/WZ/NR4A3_CD8_eff_exh.png", width = 5, height = 3)
+
+DimPlot(Treg.combined, label = T, reduction = "umap")
+VlnPlot(Treg.combined, features = c("PTPRC","CD3D","CD4","CD8A","CD14","CD68","CD79A","KLRF1",
+                                    "IL2RA","FOXP3",
+                                    "SELL","CD44","CCR7","TCF7","S100A4","IL7R",
+                                    "PDCD1","CTLA4","HAVCR2","LAG3",
+                                    "TBX21","TOX","EOMES", "PRF1","GZMA","GZMB","GZMK"), flip = T, stack = T) 
+VlnPlot(Treg.combined, features = c("PTPRC","CD3D","CD4","CD8A","CD14","CD68","CD79A","KLRF1","FCGR3A",
+                                    "CD33","ITGAM","HLA-DRA","FUT4","IL4R","CD66B",
+                                    "CD1C","NRP1"), flip = T, stack = T) 
+
+VlnPlot(Treg.combined, idents = c("Treg"), features = c("NR4A1"), split.by = "Subset2") + stat_compare_means(method = "t.test")
+ggsave("/blue/zhangw/my.kim/WZ/NR4A1_Treg_stat.png", width = 4, height = 4)
+
+VlnPlot(Treg.combined, idents = c("CD8 T eff"), features = c("NR4A3"), split.by = "Subset2") + stat_compare_means(method = "t.test")
+ggsave("/blue/zhangw/my.kim/WZ/NR4A3_CD8Teff_stat.png", width = 4, height = 4)
+
+
+VlnPlot(Treg.combined, idents = c("CD8 T exh","CD8 T eff"), features = c("NR4A1"), split.by = "Subset2")
+ggsave("/blue/zhangw/my.kim/WZ/NR4A1_CD8_eff_exh.png", width = 5, height = 3)
+
+VlnPlot(Treg.combined, idents = c("CD3+CD8- T"), features = c("NR4A1"), split.by = "Subset2")
+ggsave("/blue/zhangw/my.kim/WZ/NR4A1_CD4.png", width = 3, height = 3)
+
+VlnPlot(Treg.combined, idents = c("CD3+CD8- T","Treg","CD8 T exh","CD8 T eff","NK","Monocytes","CD16+ Monocytes","DC","pDC","B"), 
+        features = c("NR4A1"), split.by = "Subset2") + stat_compare_means(method = "t.test")
+ggsave("/blue/zhangw/my.kim/WZ/NR4A1_Allimmunecelltypes_stat.png", width = 15, height = 6)
+
+
+###
+Subset.for.markers <- subset(Treg.combined, Subset2 %in% c("Blood", "Tumor")) 
+Subset.for.markers <- subset(Subset.for.markers, idents = c("Treg")) # select objects off interest
+Idents(Subset.for.markers) <- "Subset2"
+Diff.markers <- FindMarkers(Subset.for.markers, ident.1 ="Tumor", ident.2 = "Blood", only.pos = FALSE, min.pct = 0, logfc.threshold = 0)
+write.table(Diff.markers, file="/blue/zhangw/my.kim/WZ/DEG_Treg_Tumor_Blood.csv", sep = ",", append=F)
+
+#re-level
+my_levels <- c("CD3+CD8- T","Treg","CD8 T eff","CD8 T exh")
+Treg.combined@active.ident <- factor(Treg.combined@active.ident, levels = my_levels)
+Treg.combined@active.ident <- Treg.combined$seurat_clusters
+Treg.combined <- RenameIdents(Treg.combined, '9' = "Treg",
+                              '8' = "CD8 T eff", '21' = "CD8 T eff",
+            '13' = "CD8 T exh", '20' = "CD8 T exh",'2' = "CD8 T exh",'26' = "CD8 T exh", 
+            '0' = "CD3+CD8- T",'1' = "CD3+CD8- T", '6' = "CD3+CD8- T", '14' = "CD3+CD8- T", '17' = "CD3+CD8- T",
+            '29' = "DC", 
+            '18' = "B" , '19' = "B", '28' = "B",
+            '16' = "Monocytes", '22' = "Monocytes",
+            '25' = "CD16+ Monocytes",
+            '32' = "pDC",
+            '5' = "NK", '31' ="NK")
+
+VlnPlot(Treg.combined, features = c("NR4A1","NR4A2","NR4A3"), idents = c("9"),split.by = "Subset2", group.by = "Subset2", pt.size = 0) 
+
+DimPlot(Treg.combined, label = T, reduction = "tsne", shuffle = T) 
+ggsave("/blue/zhangw/my.kim/report/GSEA/CRC_BRCA_HNC_RCC_tsne_label.png", width=3,height =3)
+DimPlot(Treg.combined, label = F, reduction = "tsne", shuffle = T, group.by = "Subset") #+ NoLegend()
+ggsave("/blue/zhangw/my.kim/report/GSEA/CRC_BRCA_HNC_RCC_tsne_label_splitby.png", width=3, height =3)
+
+#########
+Treg.combined.CD177 <- subset(Treg.combined, idents = c("9")) 
+DefaultAssay(Treg.combined.CD177) <- "integrated"
+Treg.combined.CD177 <-ScaleData(Treg.combined.CD177, verbose = FALSE)
+Treg.combined.CD177 <-RunPCA(Treg.combined.CD177, npcs = 30, verbose = FALSE)
+Treg.combined.CD177 <-RunUMAP(Treg.combined.CD177, reduction = "pca", dims = 1:30)
+Treg.combined.CD177 <-RunTSNE(Treg.combined.CD177, reduction = "pca", dims = 1:30, check_duplicates = FALSE)
+Treg.combined.CD177 <- FindNeighbors(Treg.combined.CD177, reduction = "pca", dims = 1:30) 
+Treg.combined.CD177 <- FindClusters(Treg.combined.CD177, resolution = 0.6)
+DefaultAssay(Treg.combined.CD177) <- "RNA"
+
+####
+DotPlot(Treg.combined.CD177, features = c("CD177"))
+FeaturePlot(Treg.combined.CD177, features  = c("CD177"), reduction = "tsne")
+DimPlot(Treg.combined.CD177, reduction = "tsne", label = T)
+
+#3, 16, res 0.6
+Treg.combined.CD177 <- RenameIdents(Treg.combined.CD177,
+                                    '0' = "CD177hi", '1' = "CD177null" 
